@@ -1,10 +1,40 @@
-# Python-generated files
+# ===== Python =====
 __pycache__/
 *.py[oc]
 build/
 dist/
 wheels/
-*.egg-info
+*.egg-info/
 
-# Virtual environments
-.venv
+# ===== 仮想環境 / uv =====
+.venv/
+# .python-version は再現性のため追跡する（uv の Python 固定）
+
+# ===== Jupyter =====
+.ipynb_checkpoints/
+
+# ===== 論文PDF（教材ソースだが再配布しない。ローカル参照のみ） =====
+*.pdf
+
+# ===== モデル重み・キャッシュ（大容量） =====
+*.pt
+*.pth
+*.onnx
+*.safetensors
+*.bin
+.cache/
+**/.cache/
+hf_cache/
+
+# ===== 生成物（CI でビルドして配信。コミットしない） =====
+/site/
+
+# ===== 環境変数・秘密 =====
+.env
+.env.*
+
+# ===== IDE / OS =====
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,14 @@
+[project]
+name = "qwen2-vl-practice"
+version = "0.1.0"
+description = "Qwen2-VL minimal inference demo"
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.2",
+    "torchvision>=0.17",
+    "transformers>=4.45",
+    "accelerate>=0.30",
+    "qwen-vl-utils>=0.0.8",
+    "pillow>=10.0",
+    "requests>=2.31",
+]

@@ -1,0 +1,20 @@
+[project]
+name = "qwen-vl-practice"
+version = "0.1.0"
+description = "Qwen-VL-Chat minimal inference demo (legacy custom code)"
+# Qwen-VL-Chat はレガシー custom code。下記は動作実績のある組み合わせの目安で、
+# 環境により調整が必要（README 参照）。
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "torch>=2.2",
+    "torchvision>=0.17",
+    "transformers==4.37.2",
+    "tiktoken>=0.6",
+    "einops>=0.7",
+    "transformers-stream-generator>=0.0.4",
+    "accelerate>=0.26",
+    "matplotlib>=3.7",
+    "scipy>=1.10",
+    "pillow>=10.0",
+    "requests>=2.31",
+]

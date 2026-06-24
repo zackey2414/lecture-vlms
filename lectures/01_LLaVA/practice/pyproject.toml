@@ -1,0 +1,14 @@
+[project]
+name = "llava-practice"
+version = "0.1.0"
+description = "LLaVA minimal inference demo"
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.2",
+    "transformers>=4.47",
+    "accelerate>=0.30",
+    "pillow>=10.0",
+    "requests>=2.31",
+    "sentencepiece>=0.2",
+    "protobuf>=4.0",
+]

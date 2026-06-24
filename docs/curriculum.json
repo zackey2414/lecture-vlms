@@ -1,0 +1,61 @@
+{
+  "overview": "LLM をバックボーンに持つ VLM（論文表現では MLLM: 画像＋言語を入力し言語生成を得るモデル）を、論文ベースで構造・仕組みまで理解し、HF transformers による最小推論デモで知見を得る教材。パラダイムの原点 LLaVA / LLaVA-1.5 から、3段階学習・動的解像度・M-RoPE・window attention・長尺動画へと発展する Qwen-VL 系を、学習の流れ順に読む。各回は『丁寧な地の文＋SVG図の教科書ページ』と『practice/demo.py の最小実装デモ』で構成する。",
+  "context": "本教材は研究リポジトリ（Adaptive Cluster-CLIP, ACC）の発展研究準備として、第一線の MLLM の仕組みを押さえることを目的とする。特に Qwen2.5-VL は ACC 論文の MLLM ベースライン比較対象である。",
+  "modules": [
+    {
+      "id": "01_LLaVA",
+      "title": "LLaVA — Visual Instruction Tuning（LLM＋線形projectorの原点）",
+      "track": "パラダイム原点",
+      "level": "入門",
+      "goal": "CLIP の視覚特徴を単一の線形射影で LLM の埋め込み空間へ写し、GPT-4 で合成した指示データで微調整する――以後の多くの VLM の雛形となった最小構成を理解する。",
+      "paper": "Visual Instruction Tuning — arXiv:2304.08485",
+      "deliverable": "practice/demo.py（llava-hf 系で LLaVA アーキを推論）",
+      "needs_groups": ["線形projector", "visual instruction tuning", "GPT-4データ合成"],
+      "prereqs": []
+    },
+    {
+      "id": "02_LLaVA-1.5",
+      "title": "LLaVA-1.5 — Improved Baselines（MLP projector・336px・標準ベースライン）",
+      "track": "パラダイム原点",
+      "level": "入門",
+      "goal": "線形→2層MLP projector、解像度336、学術VQAデータ、プロンプト整形という最小限の変更で標準ベースライン化したレシピを理解し、最小デモで実際に動かす。",
+      "paper": "Improved Baselines with Visual Instruction Tuning — arXiv:2310.03744",
+      "deliverable": "practice/demo.py（llava-hf/llava-1.5-7b-hf）",
+      "needs_groups": ["MLP projector", "336px", "学術VQAデータ"],
+      "prereqs": ["01_LLaVA"]
+    },
+    {
+      "id": "03_Qwen-VL",
+      "title": "Qwen-VL — Versatile VLM（Position-aware Adapter・3段階学習・grounding/OCR）",
+      "track": "Qwen系",
+      "level": "初級",
+      "goal": "cross-attention 系のコネクタ（学習可能クエリで圧縮）と3段階学習、座標トークンによる grounding・OCR を備えた Qwen-VL 系初代の設計を、LLaVA の projector 系と対比して理解する。",
+      "paper": "Qwen-VL — arXiv:2308.12966",
+      "deliverable": "practice/demo.py（Qwen/Qwen-VL-Chat, レガシー custom code）",
+      "needs_groups": ["Position-aware VL Adapter", "3段階学習", "grounding/OCR"],
+      "prereqs": ["02_LLaVA-1.5"]
+    },
+    {
+      "id": "04_Qwen2-VL",
+      "title": "Qwen2-VL — Perception at Any Resolution（動的解像度・M-RoPE・動画対応）",
+      "track": "Qwen系",
+      "level": "中級",
+      "goal": "固定解像度の制約を撤廃する naive dynamic resolution と、位置を時間・高さ・幅に分解する M-RoPE を理解する。これが画像・複数画像・動画を統一的に扱う基盤になる。",
+      "paper": "Qwen2-VL — arXiv:2409.12191",
+      "deliverable": "practice/demo.py（Qwen/Qwen2-VL-2B-Instruct）",
+      "needs_groups": ["dynamic resolution", "M-RoPE", "動画対応"],
+      "prereqs": ["03_Qwen-VL"]
+    },
+    {
+      "id": "05_Qwen2.5-VL",
+      "title": "Qwen2.5-VL — Technical Report（window attention・絶対時間・長尺動画）",
+      "track": "Qwen系",
+      "level": "中級",
+      "goal": "window attention ViT による効率化、絶対時間エンコーディングによる長尺動画理解、文書・レイアウト解析を理解する。ACC 論文の MLLM ベースラインであり、検索用途での重さも体感する。",
+      "paper": "Qwen2.5-VL Technical Report — arXiv:2502.13923",
+      "deliverable": "practice/demo.py（Qwen/Qwen2.5-VL-3B-Instruct）",
+      "needs_groups": ["window attention ViT", "絶対時間", "長尺動画", "ACCベースライン"],
+      "prereqs": ["04_Qwen2-VL"]
+    }
+  ]
+}

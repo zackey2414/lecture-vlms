@@ -1,7 +1,15 @@
 [project]
 name = "lecture-vlms"
 version = "0.1.0"
-description = "Add your description here"
+description = "LLM ベース VLM(MLLM) を論文から理解し、最小推論デモで知見を得るサーベイ教材"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = []
+
+[dependency-groups]
+# 教材閲覧サイトのビルド（Markdown→HTML 事前レンダリング）。
+# 例: uv run --group site python tools/build_site.py
+site = [
+    "markdown>=3.7",
+    "pygments>=2.18",
+]

@@ -1,0 +1,104 @@
+# Flamingo — a Visual Language Model for Few-Shot Learning
+
+Flamingo は、強力だが**凍結したまま**の視覚エンコーダ（対照学習済み NFNet）と**凍結したまま**の大規模言語モデル（Chinchilla）を、新しく学習する 2 つの小さな部品 ― 視覚特徴を固定少数トークンへ要約する **Perceiver Resampler** と、凍結 LLM の層間に差し込む **ゲート付きクロスアテンション層** ― だけで橋渡しした VLM です。画像と文を交互に並べた巨大な Web 系列で学習することで、GPT-3 がテキストで見せたのと同じ **in-context few-shot 学習**（文脈に例を数個置くだけ・タスクごとの微調整なし）をマルチモーダルに実現しました。本質は「巨大な事前学習知識を壊さずに、軽量なコネクタだけ学ぶ」という一点に尽きます。
+
+## 全体像（まず一枚で）
+
+Flamingo のデータフローは 2 本の流れが合流する形をしています。左の**視覚側**では、画像や動画フレームが凍結 Vision Encoder を通って特徴になり、Perceiver Resampler が**可変個**の特徴を**固定少数の視覚トークン**へ圧縮します。右の**言語側**では、凍結 LLM のブロック列の隙間に、新規学習する GATED XATTN-DENSE 層が挿入され、ここで言語表現が視覚トークンを参照（cross-attend）します。学習対象は青で塗った 2 部品だけで、Vision Encoder と LLM 本体は最後まで凍結です。
+
+<figure class="lec-fig"><svg viewBox="0 0 720 410" role="img" aria-label="凍結Vision EncoderからPerceiver Resampler、固定視覚トークン、凍結LLMの層間に挿入したゲート付きクロスアテンションを経て出力テキストに至るFlamingo全体構成図" font-family="ui-sans-serif, system-ui, 'Noto Sans JP', sans-serif"><rect x="20" y="16" width="16" height="12" fill="#cffafe" stroke="#0e7490" stroke-width="2"/><text x="42" y="26" font-size="12" fill="#155e75">凍結（事前学習済み）</text><rect x="20" y="36" width="16" height="12" fill="#e0e7ff" stroke="#4338ca" stroke-width="2"/><text x="42" y="46" font-size="12" fill="#3730a3">新規・学習する部品</text><rect x="70" y="350" width="110" height="40" rx="6" fill="#f4f4f5" stroke="#71717a" stroke-width="2"/><text x="125" y="375" text-anchor="middle" font-size="12" font-weight="700" fill="#52525b">画像／動画フレーム</text><line x1="125" y1="349" x2="125" y2="328" stroke="#71717a" stroke-width="2"/><polygon points="125,326 120,337 130,337" fill="#71717a"/><rect x="55" y="280" width="140" height="46" rx="8" fill="#cffafe" stroke="#0e7490" stroke-width="2"/><text x="125" y="301" text-anchor="middle" font-size="13" font-weight="700" fill="#155e75">Vision Encoder</text><text x="125" y="317" text-anchor="middle" font-size="11" fill="#155e75">NFNet・凍結</text><line x1="125" y1="279" x2="125" y2="260" stroke="#71717a" stroke-width="2"/><polygon points="125,258 120,269 130,269" fill="#71717a"/><rect x="55" y="208" width="140" height="50" rx="8" fill="#e0e7ff" stroke="#4338ca" stroke-width="2"/><text x="125" y="229" text-anchor="middle" font-size="13" font-weight="700" fill="#3730a3">Perceiver</text><text x="125" y="246" text-anchor="middle" font-size="13" font-weight="700" fill="#3730a3">Resampler</text><line x1="125" y1="207" x2="125" y2="188" stroke="#71717a" stroke-width="2"/><polygon points="125,186 120,197 130,197" fill="#71717a"/><rect x="55" y="140" width="140" height="44" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/><text x="125" y="160" text-anchor="middle" font-size="12" font-weight="700" fill="#15803d">固定数の</text><text x="125" y="176" text-anchor="middle" font-size="12" font-weight="700" fill="#15803d">視覚トークン（64）</text><line x1="195" y1="162" x2="300" y2="162" stroke="#06b6d4" stroke-width="2"/><line x1="300" y1="162" x2="300" y2="309" stroke="#06b6d4" stroke-width="2"/><text x="305" y="140" font-size="12" font-weight="700" fill="#0e7490">視覚を K,V として供給</text><line x1="300" y1="177" x2="426" y2="177" stroke="#06b6d4" stroke-width="2"/><polygon points="428,177 417,172 417,182" fill="#06b6d4"/><line x1="300" y1="309" x2="426" y2="309" stroke="#06b6d4" stroke-width="2"/><polygon points="428,309 417,304 417,314" fill="#06b6d4"/><rect x="405" y="350" width="285" height="40" rx="6" fill="#f4f4f5" stroke="#71717a" stroke-width="2"/><text x="547" y="375" text-anchor="middle" font-size="11" font-weight="700" fill="#52525b">&lt;image&gt; This is a very cute dog. ...</text><line x1="547" y1="349" x2="547" y2="330" stroke="#71717a" stroke-width="2"/><polygon points="547,328 542,339 552,339" fill="#71717a"/><rect x="430" y="292" width="235" height="34" rx="6" fill="#e0e7ff" stroke="#4338ca" stroke-width="2"/><text x="547" y="314" text-anchor="middle" font-size="12" font-weight="700" fill="#3730a3">1st GATED XATTN-DENSE</text><line x1="547" y1="291" x2="547" y2="278" stroke="#71717a" stroke-width="2"/><polygon points="547,276 542,287 552,287" fill="#71717a"/><rect x="430" y="240" width="235" height="34" rx="6" fill="#cffafe" stroke="#0e7490" stroke-width="2"/><text x="547" y="262" text-anchor="middle" font-size="12" font-weight="700" fill="#155e75">1st LM block（凍結）</text><text x="547" y="224" text-anchor="middle" font-size="16" font-weight="700" fill="#71717a">⋮</text><rect x="430" y="160" width="235" height="34" rx="6" fill="#e0e7ff" stroke="#4338ca" stroke-width="2"/><text x="547" y="182" text-anchor="middle" font-size="12" font-weight="700" fill="#3730a3">n-th GATED XATTN-DENSE</text><line x1="547" y1="159" x2="547" y2="146" stroke="#71717a" stroke-width="2"/><polygon points="547,144 542,155 552,155" fill="#71717a"/><rect x="430" y="108" width="235" height="34" rx="6" fill="#cffafe" stroke="#0e7490" stroke-width="2"/><text x="547" y="130" text-anchor="middle" font-size="12" font-weight="700" fill="#155e75">n-th LM block（凍結）</text><line x1="547" y1="107" x2="547" y2="90" stroke="#71717a" stroke-width="2"/><polygon points="547,88 542,99 552,99" fill="#71717a"/><rect x="405" y="50" width="285" height="38" rx="6" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/><text x="547" y="74" text-anchor="middle" font-size="12" font-weight="700" fill="#b91c1c">出力テキスト: a very serious cat.</text></svg><figcaption>左の視覚側で <b>Perceiver Resampler</b> が特徴を固定トークンへ要約し、右の言語側で凍結 LLM の層間に挿した <b>GATED XATTN-DENSE</b> がそのトークンを参照します。<b>学習するのは青い 2 部品だけ</b>です。</figcaption></figure>
+
+数式で見ると、Flamingo は交互系列 `x`（画像・動画）を条件とするテキスト `y` の自己回帰モデルです。
+
+```
+p(y | x) = Π_ℓ  p(y_ℓ | y_{<ℓ}, x_{≤ℓ})
+```
+
+ここで `x_{≤ℓ}` は「トークン `y_ℓ` より前に現れた画像・動画」を表します。各テキストトークンは**直前の画像だけ**を直接見る、という制約（後述）がこの式の `x_{≤ℓ}` の実体です。
+
+### 凍結する 2 つ・学習する 2 つ
+
+| 役割 | モジュール | 状態 | 中身 |
+| --- | --- | --- | --- |
+| 視覚を「知覚」する | Vision Encoder | **凍結** | 対照学習済み NFNet（F6）。動画は 1 FPS でフレーム独立に符号化し時間埋め込みを付与 |
+| 視覚を「要約」する | Perceiver Resampler | **学習** | 可変個の特徴 → 固定 64 視覚トークン |
+| 視覚を「注入」する | GATED XATTN-DENSE | **学習** | 凍結 LLM 層の隙間に挿す新規 cross-attn 層 |
+| 言語で「生成」する | LLM 本体 | **凍結** | Chinchilla（1.4B / 7B / 70B → Flamingo-3B / 9B / 80B） |
+
+凍結の効能はアブレーションで裏付けられています。LLM をゼロから学習すると性能が大きく低下し、**事前学習済み LLM を微調整しても（凍結せず学習させると）スコアが落ちます**。これは新しい目的関数を学ぶうちに事前学習知識を忘れてしまう「破滅的忘却（catastrophic forgetting）」の一例で、凍結こそがこの劣化を防ぐ鍵だ、と論文は明言しています。
+
+## Perceiver Resampler
+
+視覚エンコーダの出力は、画像なら 2D 空間グリッド、動画なら（フレーム数ぶんの）3D 時空間グリッドで、**入力ごとにトークン数が変わります**。この可変長をそのまま LLM へ流すと、cross-attention の計算量が入力サイズに比例して膨らみます。Perceiver Resampler はこれを解消する圧縮器です。
+
+仕組みは Perceiver / DETR と同系統で、**学習可能な固定本数（64）の latent クエリ**を用意し、これを Query、可変個の視覚特徴を Key/Value とした cross-attention（＋Transformer 層）を通します。出力は常に latent と同じ 64 本になるので、**入力が何枚・何フレームでも、視覚トークンは固定 64 本**に揃います。アブレーションでは、この resampler が単純な MLP やバニラ Transformer より良く（かつ速く）働くことが示されています。
+
+<figure class="lec-fig"><svg viewBox="0 0 720 300" role="img" aria-label="可変個の時空間視覚特徴を学習可能latentクエリとのクロスアテンションで固定64視覚トークンへ要約するPerceiver Resamplerの図" font-family="ui-sans-serif, system-ui, 'Noto Sans JP', sans-serif"><rect x="40" y="60" width="160" height="180" rx="8" fill="#cffafe" stroke="#0e7490" stroke-width="2"/><text x="120" y="46" text-anchor="middle" font-size="13" font-weight="700" fill="#155e75">可変個の時空間特徴</text><line x1="58" y1="82" x2="182" y2="82" stroke="#0e7490" stroke-width="3"/><line x1="58" y1="100" x2="170" y2="100" stroke="#0e7490" stroke-width="3"/><line x1="58" y1="118" x2="182" y2="118" stroke="#0e7490" stroke-width="3"/><line x1="58" y1="136" x2="150" y2="136" stroke="#0e7490" stroke-width="3"/><line x1="58" y1="154" x2="182" y2="154" stroke="#0e7490" stroke-width="3"/><line x1="58" y1="172" x2="166" y2="172" stroke="#0e7490" stroke-width="3"/><line x1="58" y1="190" x2="182" y2="190" stroke="#0e7490" stroke-width="3"/><line x1="58" y1="208" x2="156" y2="208" stroke="#0e7490" stroke-width="3"/><text x="120" y="228" text-anchor="middle" font-size="11" fill="#155e75">画像／動画で本数が変わる</text><line x1="200" y1="135" x2="266" y2="135" stroke="#71717a" stroke-width="2"/><polygon points="274,135 263,130 263,140" fill="#71717a"/><text x="237" y="124" text-anchor="middle" font-size="12" font-weight="700" fill="#52525b">K,V</text><rect x="276" y="95" width="170" height="80" rx="8" fill="#eef2ff" stroke="#6366f1" stroke-width="2"/><text x="361" y="128" text-anchor="middle" font-size="13" font-weight="700" fill="#3730a3">Cross-Attention</text><text x="361" y="148" text-anchor="middle" font-size="11" fill="#3730a3">Q=latent, K=V=特徴</text><rect x="276" y="210" width="170" height="56" rx="8" fill="#e0e7ff" stroke="#4338ca" stroke-width="2"/><text x="361" y="233" text-anchor="middle" font-size="12" font-weight="700" fill="#3730a3">学習可能 latent クエリ</text><text x="361" y="251" text-anchor="middle" font-size="12" font-weight="700" fill="#3730a3">×64（固定本数）</text><line x1="361" y1="209" x2="361" y2="178" stroke="#71717a" stroke-width="2"/><polygon points="361,176 356,187 366,187" fill="#71717a"/><text x="377" y="197" font-size="12" font-weight="700" fill="#52525b">Q</text><line x1="446" y1="135" x2="512" y2="135" stroke="#71717a" stroke-width="2"/><polygon points="520,135 509,130 509,140" fill="#71717a"/><rect x="522" y="105" width="160" height="62" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/><text x="602" y="132" text-anchor="middle" font-size="13" font-weight="700" fill="#15803d">固定 64 視覚トークン</text><text x="602" y="152" text-anchor="middle" font-size="11" fill="#15803d">入力サイズに依らず一定</text></svg><figcaption>本数の変わる視覚特徴を Key/Value、<b>学習可能な 64 本の latent クエリ</b>を Query とした cross-attention で、出力を<b>常に固定 64 トークン</b>へ畳み込みます。以降の視覚-言語 cross-attention の計算量が入力サイズから切り離されます。</figcaption></figure>
+
+## ゲート付きクロスアテンション
+
+固定 64 トークンになった視覚情報を、どうやって**凍結した** LLM に注入するか。Flamingo の答えは、既存の凍結 LLM ブロックの**隙間に新しい cross-attention 層（GATED XATTN-DENSE）を挿入する**ことです。この層では言語表現が Query、視覚トークンが Key/Value になります。
+
+ここで核心になるのが **tanh ゲート**です。挿入層の出力を残差に足すとき、層ごとの学習可能スカラ `α` を通した `tanh(α)` を掛けます。`α` は **0 で初期化**されるので、学習開始時は `tanh(0)=0`、つまり挿入層の寄与はゼロ ― **モデル全体の出力は元の凍結 LLM と完全に一致**します。学習が進むにつれて `α` が 0 から動き、ゲートが少しずつ開いて視覚情報が混ざっていきます。「最初は壊さない、徐々に取り込む」という設計です。
+
+<figure class="lec-fig"><svg viewBox="0 0 720 290" role="img" aria-label="tanhゲートが初期化時はalpha0で閉じLLM出力が不変、学習後はalphaが正でゲートが開き視覚情報が統合される様子を左右2パネルで示す図" font-family="ui-sans-serif, system-ui, 'Noto Sans JP', sans-serif"><text x="360" y="28" text-anchor="middle" font-size="13" font-weight="700" fill="#18181b">y ← y + tanh(α) · CrossAttn( Q=y, K=V=視覚トークン )</text><rect x="20" y="48" width="330" height="222" rx="10" fill="#fafafa" stroke="#e4e4e7" stroke-width="2"/><text x="185" y="72" text-anchor="middle" font-size="13" font-weight="700" fill="#b91c1c">初期化時: α = 0（ゲート閉）</text><rect x="40" y="150" width="120" height="46" rx="8" fill="#e0e7ff" stroke="#4338ca" stroke-width="2"/><text x="100" y="170" text-anchor="middle" font-size="12" font-weight="700" fill="#3730a3">Cross-Attn</text><text x="100" y="187" text-anchor="middle" font-size="11" fill="#3730a3">（K=V=視覚）</text><line x1="160" y1="173" x2="192" y2="173" stroke="#dc2626" stroke-width="2" stroke-dasharray="5 4"/><circle cx="212" cy="173" r="18" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/><text x="212" y="178" text-anchor="middle" font-size="12" font-weight="700" fill="#b91c1c">×0</text><text x="212" y="212" text-anchor="middle" font-size="11" font-weight="700" fill="#b91c1c">tanh(0)=0</text><line x1="230" y1="173" x2="286" y2="173" stroke="#dc2626" stroke-width="2" stroke-dasharray="5 4"/><circle cx="292" cy="173" r="5" fill="#71717a"/><line x1="292" y1="245" x2="292" y2="110" stroke="#71717a" stroke-width="2"/><polygon points="292,108 287,119 297,119" fill="#71717a"/><text x="292" y="260" text-anchor="middle" font-size="11" font-weight="700" fill="#52525b">LM 残差 y</text><text x="292" y="98" text-anchor="middle" font-size="11" font-weight="700" fill="#52525b">出力 = 元の LM と同一</text><rect x="370" y="48" width="330" height="222" rx="10" fill="#fafafa" stroke="#e4e4e7" stroke-width="2"/><text x="535" y="72" text-anchor="middle" font-size="13" font-weight="700" fill="#15803d">学習後: α &gt; 0（ゲート開）</text><rect x="390" y="150" width="120" height="46" rx="8" fill="#e0e7ff" stroke="#4338ca" stroke-width="2"/><text x="450" y="170" text-anchor="middle" font-size="12" font-weight="700" fill="#3730a3">Cross-Attn</text><text x="450" y="187" text-anchor="middle" font-size="11" fill="#3730a3">（K=V=視覚）</text><line x1="510" y1="173" x2="542" y2="173" stroke="#16a34a" stroke-width="3"/><circle cx="562" cy="173" r="18" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/><text x="562" y="178" text-anchor="middle" font-size="11" font-weight="700" fill="#15803d">×tanhα</text><text x="562" y="212" text-anchor="middle" font-size="11" font-weight="700" fill="#15803d">tanh(α)&gt;0</text><line x1="580" y1="173" x2="636" y2="173" stroke="#16a34a" stroke-width="3"/><polygon points="640,173 629,168 629,178" fill="#16a34a"/><circle cx="642" cy="173" r="5" fill="#71717a"/><line x1="642" y1="245" x2="642" y2="110" stroke="#71717a" stroke-width="2"/><polygon points="642,108 637,119 647,119" fill="#71717a"/><text x="642" y="260" text-anchor="middle" font-size="11" font-weight="700" fill="#52525b">LM 残差 y</text><text x="642" y="98" text-anchor="middle" font-size="11" font-weight="700" fill="#52525b">出力 = 視覚を統合した表現</text></svg><figcaption>挿入層の寄与は <b>tanh(α)</b> 倍されてから残差に加算されます。<b>α=0 初期化</b>なら開始時は寄与ゼロで凍結 LLM は不変、学習が進むとゲートが開き視覚が混ざります。これを外すと <b>学習が不安定化</b>し、全体スコアも数 % 低下することがアブレーションで示されています。</figcaption></figure>
+
+挿入層は cross-attention だけでなく、続く dense 層（FFW）も同じく `tanh` ゲートを通します。擬似コードで書くと次の通りです。
+
+```python
+def gated_xattn_dense(y, x, alpha_xattn, alpha_dense):
+    # y: 言語特徴, x: 視覚特徴(64トークン), alpha_*: 初期値0のゲート
+    # 1. ゲート付きクロスアテンション
+    y = y + tanh(alpha_xattn) * attention(q=y, kv=x)
+    # 2. ゲート付き dense (FFW) 層
+    y = y + tanh(alpha_dense) * ffw(y)
+    # 3. ここから先は凍結 LLM の通常処理（self-attn と FFW）
+    y = y + frozen_attention(q=y, kv=y)
+    y = y + frozen_ffw(y)
+    return y
+```
+
+挿入の**頻度**は計算量とのトレードオフです。全ブロックに挿すのが性能は最良ですが、学習パラメータと計算時間が大きく増えるため、Flamingo-9B は 4 層ごと、Flamingo-80B は 7 層ごとに挿入してバランスを取っています。
+
+## 交互配置データと few-shot in-context 学習
+
+few-shot 能力の源泉は学習データの形にあります。Flamingo は Web から集めた **3 種**を混ぜて学習します ― 画像と文が交互に並ぶページ由来の系列（**M3W: MultiModal MassiveWeb**、約 4,300 万ページ）、画像-テキストペア、そして動画-テキストペアです。各データセットの重み付き負対数尤度の和を最小化し、勾配は全データセットで累積します（round-robin より良いと報告）。とくに **M3W を抜くと性能が 17% 超も落ちる**ことが、交互配置データが few-shot 能力に決定的だと裏付けています。
+
+交互系列で重要なのが **per-image attention mask** です。各テキストトークンが cross-attend できるのは、系列上で**直前に現れた 1 枚の画像の視覚トークンだけ**に制限されます。それより前の画像への依存は、LLM 本体の self-attention を通じて間接的に伝わります。「直接見るのは常に 1 枚」というこの単純な規則のおかげで、学習時は系列あたり最大 5 枚しか使わなくても、**評価時には 32 ショット（多数の画像・動画）まで自然に一般化**できます。動画は複数フレーム＝複数画像として同じ枠組みで扱われます。
+
+<figure class="lec-fig"><svg viewBox="0 0 720 280" role="img" aria-label="画像と文を交互に並べた系列で各テキストが直前の画像のみにアテンションし、サポート例を文脈に置いてクエリへ答えるfew-shot in-context学習の図" font-family="ui-sans-serif, system-ui, 'Noto Sans JP', sans-serif"><line x1="30" y1="60" x2="345" y2="60" stroke="#4338ca" stroke-width="2"/><line x1="30" y1="60" x2="30" y2="70" stroke="#4338ca" stroke-width="2"/><line x1="345" y1="60" x2="345" y2="70" stroke="#4338ca" stroke-width="2"/><text x="187" y="50" text-anchor="middle" font-size="12" font-weight="700" fill="#3730a3">サポート例（文脈に置くだけ・重み更新なし）</text><line x1="360" y1="60" x2="560" y2="60" stroke="#dc2626" stroke-width="2"/><line x1="360" y1="60" x2="360" y2="70" stroke="#dc2626" stroke-width="2"/><line x1="560" y1="60" x2="560" y2="70" stroke="#dc2626" stroke-width="2"/><text x="460" y="50" text-anchor="middle" font-size="12" font-weight="700" fill="#b91c1c">クエリ</text><rect x="30" y="100" width="60" height="50" rx="6" fill="#cffafe" stroke="#0e7490" stroke-width="2"/><text x="60" y="130" text-anchor="middle" font-size="12" font-weight="700" fill="#155e75">画像1</text><rect x="95" y="108" width="90" height="34" rx="6" fill="#f4f4f5" stroke="#71717a" stroke-width="2"/><text x="140" y="130" text-anchor="middle" font-size="11" font-weight="700" fill="#52525b">説明1</text><rect x="190" y="100" width="60" height="50" rx="6" fill="#cffafe" stroke="#0e7490" stroke-width="2"/><text x="220" y="130" text-anchor="middle" font-size="12" font-weight="700" fill="#155e75">画像2</text><rect x="255" y="108" width="90" height="34" rx="6" fill="#f4f4f5" stroke="#71717a" stroke-width="2"/><text x="300" y="130" text-anchor="middle" font-size="11" font-weight="700" fill="#52525b">説明2</text><rect x="360" y="100" width="60" height="50" rx="6" fill="#cffafe" stroke="#0e7490" stroke-width="2"/><text x="390" y="130" text-anchor="middle" font-size="12" font-weight="700" fill="#155e75">画像3</text><rect x="425" y="108" width="135" height="34" rx="6" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/><text x="492" y="130" text-anchor="middle" font-size="11" font-weight="700" fill="#b91c1c">問い → 答えを生成</text><path d="M120,153 C110,185 75,185 62,154" fill="none" stroke="#16a34a" stroke-width="2"/><polygon points="62,154 60,166 70,160" fill="#16a34a"/><path d="M280,153 C270,185 235,185 222,154" fill="none" stroke="#16a34a" stroke-width="2"/><polygon points="222,154 220,166 230,160" fill="#16a34a"/><path d="M450,153 C435,190 405,190 392,154" fill="none" stroke="#16a34a" stroke-width="2"/><polygon points="392,154 390,166 400,160" fill="#16a34a"/><text x="360" y="235" text-anchor="middle" font-size="12" font-weight="700" fill="#15803d">各テキストは直前の画像のみに cross-attend（per-image mask）</text><text x="360" y="258" text-anchor="middle" font-size="11" fill="#52525b">それ以前の画像への依存は LLM の self-attention 経由で間接的に伝わる</text></svg><figcaption>画像と文を交互に並べ、<b>各テキストは直前の 1 枚だけ</b>を直接参照します。タスクの (画像, 答え) 例を文脈に数個置き、最後にクエリを与えれば、<b>重み更新なしで</b>続きを生成 ― GPT-3 の few-shot プロンプトのマルチモーダル版です。</figcaption></figure>
+
+評価は 2 通りです。キャプションや VQA のような **open-ended** タスクではビームサーチで自由文を生成し、多肢選択のような **close-ended** タスクでは各候補の対数尤度をスコアにします。タスクごとの微調整なしに、**単一の Flamingo** が幅広い画像・動画タスクで当時の few-shot SOTA を更新し、いくつかのベンチマークでは数千倍も多いデータで微調整した手法すら上回りました。
+
+## ACC 研究との関連
+
+私たちが取り組む発展研究 **ACC（Adaptive Cluster-CLIP）** は、物体中心の Open-Vocabulary 動画フレーム検索です。CLIP（ResNet-50 系の Dense-CLIP）の局所特徴をクラスタリングして**少数の集約ベクトル**へ圧縮し、**クエリ非依存のインデックス**を一度だけ構築して、多数のクエリで再利用します。MI-AFS 由来の変化スコアで時間方向を区間分割し、GradAlloc で時間的冗長性に応じて集約ベクトル数を区間ごとに適応配分します。狙いは検索レイテンシで、論文は MLLM（Qwen2.5-VL / Qwen3-VL）が「**クエリごとに全フレームを再処理**」してしまい、検索でレイテンシ支配的になる点を示します。
+
+Flamingo がこの文脈で重要なのは、それが「**凍結バックボーン＋学習可能コネクタ＋凍結 LLM**」という構図を確立した、以後ほぼ全ての MLLM の源流だからです。ACC が「クエリごとに重い」と指摘する MLLM パイプラインの源流的な姿が、まさにこの Flamingo 構造にあります。
+
+興味深い対比は**圧縮**にあります。Perceiver Resampler は可変個の視覚特徴を固定少数トークンへ畳み込み、ACC は局所特徴を少数の集約ベクトルへ畳み込む ― 発想は鏡合わせです。ただし用途は異なります。
+
+| 観点 | Flamingo（Perceiver Resampler） | ACC（Adaptive Cluster-CLIP） |
+| --- | --- | --- |
+| 圧縮対象 | 1 入力ぶんの時空間特徴 | 動画全体の局所特徴 |
+| 圧縮先 | 固定 64 視覚トークン | 区間ごとに適応配分した集約ベクトル |
+| 圧縮の目的 | LLM へ注入し**生成**する | 一度作って多クエリで再利用する**検索インデックス** |
+| クエリ依存 | 生成時にプロンプト依存 | **クエリ非依存**（事前構築・再利用） |
+
+few-shot in-context 学習はあくまで「生成」のパラダイムで、検索とは別物です。それでも Flamingo を読むと、**1 枚の画像がコネクタ（Resampler）と LLM を通るたびにどれだけの計算を要するか**の直感が得られます。この「画像 1 枚あたりの重さ」を全クエリ・全フレームに掛け算するとレイテンシが破綻する ― そこが、ACC が**クエリ非依存インデックス**で攻めようとしている地点です。
+
+## まとめと、読解後に答えたい問い
+
+- Flamingo の本質は **「凍結した強力な視覚エンコーダと凍結 LLM を、軽量な学習部品だけで橋渡しする」** こと。学習するのは Perceiver Resampler と GATED XATTN-DENSE の 2 つだけ。
+- **Perceiver Resampler** は学習可能 latent クエリで可変個の視覚特徴を**固定 64 トークン**へ要約し、視覚-言語 cross-attention の計算量を入力サイズから切り離す。
+- **tanh ゲート（α=0 初期化）** が凍結 LLM を開始時は不変に保ち、学習で徐々に視覚を統合する。凍結とこのゲートが**破滅的忘却の回避**と**学習安定化**の両輪。
+- 交互配置データ（とくに M3W）＋ per-image mask が、**微調整なしの few-shot in-context 学習**を可能にした。
+- Flamingo は以後の MLLM の**源流**であり、ACC が向き合う「クエリごとに重い MLLM 検索」の構造的ルーツでもある。
+
+読解後にぜひ自分の言葉で答えてみてください。
+
+1. なぜ視覚エンコーダと LLM を**凍結**したまま繋いだのか。学習させた場合に何が起きると論文は示しているか。
+2. Perceiver Resampler が「可変 → 固定」変換をするのは具体的にどの計算量を抑えるためか。MLP で代替できなかったのはなぜか。
+3. `tanh(α)` ゲートを `α=0` で初期化することが、学習の初期挙動にどんな保証を与えるか。これを外すと何が起きるか。
+4. per-image attention mask の下で、3 枚目の画像の情報は 1 枚目の説明文にどう（直接？間接？）伝わるか。
+5. 「画像 1 枚が Resampler と LLM を通る重さ」という直感を、ACC のクエリ非依存インデックスの動機にどう接続できるか。

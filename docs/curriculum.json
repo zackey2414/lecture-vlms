@@ -1,31 +1,86 @@
 {
-  "overview": "LLM をバックボーンに持つ VLM（論文表現では MLLM: 画像＋言語を入力し言語生成を得るモデル）を、論文ベースで構造・仕組みまで理解し、HF transformers による最小推論デモで知見を得る教材。パラダイムの原点 LLaVA / LLaVA-1.5 から、3段階学習・動的解像度・M-RoPE・window attention・長尺動画へと発展する Qwen-VL 系を、学習の流れ順に読む。各回は『丁寧な地の文＋SVG図の教科書ページ』と『practice/demo.py の最小実装デモ』で構成する。",
-  "context": "本教材は研究リポジトリ（Adaptive Cluster-CLIP, ACC）の発展研究準備として、第一線の MLLM の仕組みを押さえることを目的とする。特に Qwen2.5-VL は ACC 論文の MLLM ベースライン比較対象である。",
+  "overview": "LLM をバックボーンに持つ VLM（論文表現では MLLM: 画像＋言語を入力し言語生成を得るモデル）を、論文ベースで構造・仕組みまで理解し、必要に応じて HF transformers の最小推論デモで知見を得る教材。MLLM の原点（Flamingo / BLIP-2 / InstructBLIP / MiniGPT-4）から、visual instruction tuning の LLaVA 系、3段階学習・動的解像度・M-RoPE・長尺動画へ発展する Qwen-VL 系、大規模視覚エンコーダの InternVL 系までを、学習の流れ順・高被引用モデル中心に読む。",
+  "context": "本教材は研究リポジトリ（Adaptive Cluster-CLIP, ACC）の発展研究準備として、第一線の MLLM の仕組みを押さえることを目的とする。特に Qwen2.5-VL / Qwen3-VL は ACC 論文の MLLM ベースライン比較対象である。番号は安定した ID であり、実際の学習順は各回の prereqs（学習順序グラフ）が正。",
   "modules": [
     {
-      "id": "01_LLaVA",
+      "id": "01_Flamingo",
+      "title": "Flamingo — Visual Language Model for Few-Shot Learning",
+      "track": "黎明期・原点",
+      "level": "初級",
+      "goal": "凍結した視覚エンコーダと凍結 LLM を、Perceiver Resampler と層間に挿入したゲート付きクロスアテンションで接続し、画像と文を交互に並べた系列で few-shot の in-context 学習を可能にした MLLM の原点を理解する。",
+      "paper": "Flamingo: a Visual Language Model for Few-Shot Learning — arXiv:2204.14198",
+      "deliverable": "—（教材ページ）",
+      "needs_groups": ["Perceiver Resampler", "ゲート付きcross-attn", "in-context few-shot"],
+      "prereqs": []
+    },
+    {
+      "id": "02_BLIP-2",
+      "title": "BLIP-2 — Q-Former で凍結エンコーダと凍結LLMを橋渡し",
+      "track": "黎明期・原点",
+      "level": "入門",
+      "goal": "凍結画像エンコーダと凍結 LLM の間を、学習可能な少数クエリを持つ軽量 Transformer『Q-Former』で2段階に橋渡しし、少ない学習量で強力なゼロショット視覚言語生成を実現する設計を理解する。",
+      "paper": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and LLMs — arXiv:2301.12597",
+      "deliverable": "—（教材ページ）",
+      "needs_groups": ["Q-Former", "2段階学習", "凍結エンコーダ＋凍結LLM"],
+      "prereqs": ["01_Flamingo"]
+    },
+    {
+      "id": "03_InstructBLIP",
+      "title": "InstructBLIP — instruction-aware Q-Former",
+      "track": "黎明期・原点",
+      "level": "初級",
+      "goal": "BLIP-2 を土台に、指示文を Q-Former にも与える instruction-aware な特徴抽出と多様な指示データで、13ベンチで SoTA 級のゼロショット指示追従を達成した手法を理解する。",
+      "paper": "InstructBLIP: Towards General-purpose Vision-Language Models with Instruction Tuning — arXiv:2305.06500",
+      "deliverable": "—（教材ページ）",
+      "needs_groups": ["instruction-aware Q-Former", "ゼロショット指示追従"],
+      "prereqs": ["02_BLIP-2"]
+    },
+    {
+      "id": "04_MiniGPT-4",
+      "title": "MiniGPT-4 — 単一線形射影で凍結LLMに会話能力",
+      "track": "黎明期・原点",
+      "level": "入門",
+      "goal": "凍結した視覚エンコーダ＋Q-Former と凍結 LLM(Vicuna) を『単一の線形射影』だけで接続し、高品質な合成データで微調整して GPT-4 的な対話能力を引き出した先駆けを理解する。",
+      "paper": "MiniGPT-4: Enhancing Vision-Language Understanding with Advanced LLMs — arXiv:2304.10592",
+      "deliverable": "—（教材ページ）",
+      "needs_groups": ["単一線形射影", "凍結LLM", "高品質合成データ"],
+      "prereqs": ["02_BLIP-2"]
+    },
+    {
+      "id": "05_LLaVA",
       "title": "LLaVA — Visual Instruction Tuning（LLM＋線形projectorの原点）",
-      "track": "パラダイム原点",
+      "track": "LLaVA系",
       "level": "入門",
       "goal": "CLIP の視覚特徴を単一の線形射影で LLM の埋め込み空間へ写し、GPT-4 で合成した指示データで微調整する――以後の多くの VLM の雛形となった最小構成を理解する。",
       "paper": "Visual Instruction Tuning — arXiv:2304.08485",
       "deliverable": "practice/demo.py（llava-hf 系で LLaVA アーキを推論）",
       "needs_groups": ["線形projector", "visual instruction tuning", "GPT-4データ合成"],
-      "prereqs": []
+      "prereqs": ["04_MiniGPT-4"]
     },
     {
-      "id": "02_LLaVA-1.5",
+      "id": "06_LLaVA-1.5",
       "title": "LLaVA-1.5 — Improved Baselines（MLP projector・336px・標準ベースライン）",
-      "track": "パラダイム原点",
+      "track": "LLaVA系",
       "level": "入門",
       "goal": "線形→2層MLP projector、解像度336、学術VQAデータ、プロンプト整形という最小限の変更で標準ベースライン化したレシピを理解し、最小デモで実際に動かす。",
       "paper": "Improved Baselines with Visual Instruction Tuning — arXiv:2310.03744",
       "deliverable": "practice/demo.py（llava-hf/llava-1.5-7b-hf）",
       "needs_groups": ["MLP projector", "336px", "学術VQAデータ"],
-      "prereqs": ["01_LLaVA"]
+      "prereqs": ["05_LLaVA"]
     },
     {
-      "id": "03_Qwen-VL",
+      "id": "07_LLaVA-OneVision",
+      "title": "LLaVA-OneVision — Easy Visual Task Transfer（単一画像・複数画像・動画の統合）",
+      "track": "LLaVA系",
+      "level": "中級",
+      "goal": "単一画像・複数画像・動画を一つのモデル・一つのレシピで統合し、画像で学んだ能力を動画へ転移（task transfer）させる LLaVA 系の到達点を理解する。",
+      "paper": "LLaVA-OneVision: Easy Visual Task Transfer — arXiv:2408.03326",
+      "deliverable": "—（教材ページ）",
+      "needs_groups": ["単一/複数画像/動画の統合", "task transfer", "AnyRes"],
+      "prereqs": ["06_LLaVA-1.5"]
+    },
+    {
+      "id": "08_Qwen-VL",
       "title": "Qwen-VL — Versatile VLM（Position-aware Adapter・3段階学習・grounding/OCR）",
       "track": "Qwen系",
       "level": "初級",
@@ -33,10 +88,10 @@
       "paper": "Qwen-VL — arXiv:2308.12966",
       "deliverable": "practice/demo.py（Qwen/Qwen-VL-Chat, レガシー custom code）",
       "needs_groups": ["Position-aware VL Adapter", "3段階学習", "grounding/OCR"],
-      "prereqs": ["02_LLaVA-1.5"]
+      "prereqs": ["06_LLaVA-1.5"]
     },
     {
-      "id": "04_Qwen2-VL",
+      "id": "09_Qwen2-VL",
       "title": "Qwen2-VL — Perception at Any Resolution（動的解像度・M-RoPE・動画対応）",
       "track": "Qwen系",
       "level": "中級",
@@ -44,10 +99,10 @@
       "paper": "Qwen2-VL — arXiv:2409.12191",
       "deliverable": "practice/demo.py（Qwen/Qwen2-VL-2B-Instruct）",
       "needs_groups": ["dynamic resolution", "M-RoPE", "動画対応"],
-      "prereqs": ["03_Qwen-VL"]
+      "prereqs": ["08_Qwen-VL"]
     },
     {
-      "id": "05_Qwen2.5-VL",
+      "id": "10_Qwen2.5-VL",
       "title": "Qwen2.5-VL — Technical Report（window attention・絶対時間・長尺動画）",
       "track": "Qwen系",
       "level": "中級",
@@ -55,7 +110,40 @@
       "paper": "Qwen2.5-VL Technical Report — arXiv:2502.13923",
       "deliverable": "practice/demo.py（Qwen/Qwen2.5-VL-3B-Instruct）",
       "needs_groups": ["window attention ViT", "絶対時間", "長尺動画", "ACCベースライン"],
-      "prereqs": ["04_Qwen2-VL"]
+      "prereqs": ["09_Qwen2-VL"]
+    },
+    {
+      "id": "11_Qwen3-VL",
+      "title": "Qwen3-VL — Technical Report（Dense/MoE・Thinking・256K・GUI Agent・3D grounding）",
+      "track": "Qwen系",
+      "level": "上級",
+      "goal": "Dense/MoE 構成、Thinking 版、256K コンテキスト、GUI Agent、3D grounding まで広げた Qwen-VL 系の最新世代を理解する。ACC 論文の MLLM ベースライン比較対象でもある。",
+      "paper": "Qwen3-VL Technical Report — arXiv:2511.21631",
+      "deliverable": "—（教材ページ）",
+      "needs_groups": ["Dense/MoE", "Thinking", "256Kコンテキスト", "GUI Agent", "ACCベースライン"],
+      "prereqs": ["10_Qwen2.5-VL"]
+    },
+    {
+      "id": "12_InternVL",
+      "title": "InternVL — Scaling up Vision Foundation Models（大規模 InternViT）",
+      "track": "InternVL系",
+      "level": "初級",
+      "goal": "視覚エンコーダを 6B 規模の InternViT までスケールし、言語側と段階的に整列させて、視覚基盤モデルを大型化した別系統の原点を理解する。",
+      "paper": "InternVL: Scaling up Vision Foundation Models and Aligning for Generic Visual-Linguistic Tasks — arXiv:2312.14238",
+      "deliverable": "—（教材ページ）",
+      "needs_groups": ["InternViT(大規模)", "段階的整列", "QLLaMA"],
+      "prereqs": ["02_BLIP-2"]
+    },
+    {
+      "id": "13_InternVL3",
+      "title": "InternVL3 — Native Multimodal Pretraining と Test-Time Recipe",
+      "track": "InternVL系",
+      "level": "中級",
+      "goal": "ゼロから視覚と言語を同時に学ぶ native multimodal pretraining と、可変解像度・test-time scaling 等のレシピを導入した InternVL 系の最新世代を理解する。",
+      "paper": "InternVL3: Exploring Advanced Training and Test-Time Recipes — arXiv:2504.10479",
+      "deliverable": "—（教材ページ）",
+      "needs_groups": ["native multimodal pretraining", "可変解像度", "test-time scaling"],
+      "prereqs": ["12_InternVL"]
     }
   ]
 }

@@ -11,7 +11,7 @@ LLaVA の原型「CLIP 視覚特徴 →（**線形** projector）→ LLM(Vicuna)
   [`../materials/README.md`](../materials/README.md) と論文で学ぶ**前提。
 - 原典の重みを実際に使う場合は、[LLaVA 公式リポジトリ](https://github.com/haotian-liu/LLaVA) の手順で
   base(Vicuna) ＋ delta を merge する必要がある（本デモのスコープ外）。
-- 「線形 → MLP projector・データ強化・解像度 336」という**差分**は次章 [02 LLaVA-1.5](../../02_LLaVA-1.5/) で確認。
+- 「線形 → MLP projector・データ強化・解像度 336」という**差分**は次章 [02 LLaVA-1.5](../../06_LLaVA-1.5/) で確認。
 
 ## モデル（`--model`）
 
@@ -23,7 +23,7 @@ LLaVA の原型「CLIP 視覚特徴 →（**線形** projector）→ LLM(Vicuna)
 ## ローカルで実行（uv）
 
 ```bash
-cd lectures/01_LLaVA/practice
+cd lectures/05_LLaVA/practice
 uv run demo.py
 uv run demo.py --prompt "画像の状況を説明して"
 ```
@@ -31,7 +31,7 @@ uv run demo.py --prompt "画像の状況を説明して"
 ## Docker で実行
 
 ```bash
-cd lectures/01_LLaVA/practice
+cd lectures/05_LLaVA/practice
 docker build -t llava-demo .
 docker run --rm --gpus all \
   -v "$HOME/.cache/huggingface:/root/.cache/huggingface" \

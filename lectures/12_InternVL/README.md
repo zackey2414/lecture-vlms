@@ -6,7 +6,7 @@ LLaVA や BLIP-2 を学んだ私たちは、「視覚エンコーダは凍結し
 
 InternVL 論文が最初に指摘するのは、視覚と言語のあいだに横たわる二つのギャップです。
 
-- **パラメータ規模の非対称（disparity in parameter scales）**：論文の言葉では、大規模 LLM は今や 1000 億規模にまで膨らむ一方、VLLM が使う視覚エンコーダは依然として「およそ 10 億」前後にとどまる。視覚側が小さいと、せっかくの LLM の容量を活かしきれない（under-use of LLM's capacity）。
+- **パラメータ規模の非対称（disparity in parameter scales）**：論文の言葉では、大規模 LLM は今や 1 兆（1000 billion）規模にまで膨らむ一方、VLLM が使う視覚エンコーダは依然として「およそ 10 億」前後にとどまる。視覚側が小さいと、せっかくの LLM の容量を活かしきれない（under-use of LLM's capacity）。
 - **表現の不整合（inconsistent representation）**：純視覚データや BERT 系で学習された視覚特徴は、LLM の表現空間と素直に揃わない。
 - **非効率な接続（inefficient connection）**：BLIP-2 の Q-Former や LLaVA の線形層といった「glue（糊）」は軽量かつランダム初期化で、マルチモーダルに必要な豊かな相互作用を捉えきれないことがある。
 

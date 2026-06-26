@@ -2,7 +2,6 @@
 
 画像1枚とプロンプトを与え、`Qwen2_5_VLForConditionalGeneration` で言語生成を得る。
 ポイント: window attention ViT・動的解像度・絶対時間エンコーディング（長尺動画）。
-ACC 論文の MLLM ベースライン比較対象（論文 6 章・表 7）。
 """
 
 import argparse

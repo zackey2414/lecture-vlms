@@ -1,4 +1,4 @@
-# 03 Qwen-VL — practice（最小推論デモ）
+# 08 Qwen-VL — practice（最小推論デモ）
 
 初代 Qwen-VL（ViT → Position-aware VL Adapter → LLM）を `model.chat()` で動かす最小デモ。
 

@@ -1,7 +1,7 @@
-# 05 Qwen2.5-VL — practice（最小推論デモ）
+# 10 Qwen2.5-VL — practice（最小推論デモ）
 
 window attention ViT・動的解像度・絶対時間（長尺動画）を持つ Qwen2.5-VL の最小デモ。
-**ACC 論文の MLLM ベースライン**（論文 6 章・表 7）であり、検索用途での挙動感覚を掴むのに最適。
+大規模で高機能な MLLM の単体推論を、最小コードで体感できます。
 
 ## モデルサイズ選択肢（`--model`）
 
@@ -47,6 +47,4 @@ docker run --rm --gpus all \
 ## 補足
 
 - `Qwen2_5_VLForConditionalGeneration` には **transformers>=4.49** が必要（pyproject で指定済み）。
-- ACC との関連: MLLM はクエリごとに全フレーム再処理が必要で検索レイテンシが支配的。
-  本デモで単体推論の重さを体感すると、論文 6 章の「ACC が約 130 倍高速」の意味が掴める。
 - 仕組みの詳細は [`../materials/README.md`](../materials/README.md)。

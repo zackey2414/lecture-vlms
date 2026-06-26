@@ -1,4 +1,4 @@
-# 01 LLaVA — practice（最小推論デモ）
+# 05 LLaVA — practice（最小推論デモ）
 
 LLaVA の原型「CLIP 視覚特徴 →（**線形** projector）→ LLM(Vicuna) → 生成」を動かす最小デモ。
 

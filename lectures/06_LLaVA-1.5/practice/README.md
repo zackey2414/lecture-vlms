@@ -1,4 +1,4 @@
-# 02 LLaVA-1.5 — practice（最小推論デモ）
+# 06 LLaVA-1.5 — practice（最小推論デモ）
 
 CLIP 視覚特徴 →（MLP projector）→ LLM(Vicuna) という LLaVA-1.5 を、画像1枚で動かす最小デモ。
 

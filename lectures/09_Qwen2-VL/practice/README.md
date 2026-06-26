@@ -1,4 +1,4 @@
-# 04 Qwen2-VL — practice（最小推論デモ）
+# 09 Qwen2-VL — practice（最小推論デモ）
 
 任意解像度を可変トークン化する **naive dynamic resolution** と **M-RoPE** を持つ Qwen2-VL の最小デモ。
 

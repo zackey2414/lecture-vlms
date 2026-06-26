@@ -12,4 +12,5 @@ dependencies = []
 site = [
     "markdown>=3.7",
     "pygments>=2.18",
+    "pymdown-extensions>=10.0",
 ]

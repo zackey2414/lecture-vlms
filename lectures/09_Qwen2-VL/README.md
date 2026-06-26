@@ -1,10 +1,10 @@
 # Qwen2-VL — Perception at Any Resolution（動的解像度・M-RoPE・動画対応）
 
-Qwen-VL までの VLM は、入力画像を 224×224 のような固定解像度へリサイズしてから視覚トークン列に変換していました。Qwen2-VL（*Enhancing Vision-Language Model's Perception of the World at Any Resolution*, arXiv:2409.12191）は、この「あらかじめ決め打ちした解像度」という前提を捨て、**任意解像度の画像を可変個の視覚トークンへ動的に変換する Naive Dynamic Resolution** と、**位置を時間・高さ・幅の3成分へ分解する M-RoPE** の2点で知覚を拡張します。本ページでは、この2つの仕組みがなぜ自然に「画像／複数画像／動画を1モデルで」扱う基盤になるのかを腹落ちさせます。
+Qwen-VL までの VLM は、入力画像を $224 \times 224$ のような固定解像度へリサイズしてから視覚トークン列に変換していました。Qwen2-VL（*Enhancing Vision-Language Model's Perception of the World at Any Resolution*, arXiv:2409.12191）は、この「あらかじめ決め打ちした解像度」という前提を捨て、**任意解像度の画像を可変個の視覚トークンへ動的に変換する Naive Dynamic Resolution** と、**位置を時間・高さ・幅の3成分へ分解する M-RoPE** の2点で知覚を拡張します。本ページでは、この2つの仕組みがなぜ自然に「画像／複数画像／動画を1モデルで」扱う基盤になるのかを腹落ちさせます。
 
 ## 全体像（まず一枚で）
 
-Qwen2-VL は Qwen-VL の枠組み（視覚エンコーダ → コネクタ → LLM）を踏襲しつつ、各部品を「解像度に縛られない」よう作り替えています。視覚エンコーダは約 675M パラメータの ViT で、画像でも動画でも共通に使われ、その後段で隣接 2×2 トークンを MLP で 1 トークンへ圧縮してから Qwen2 LLM（1.5B / 7.6B / 72B）へ渡します。ViT の規模を LLM の大小によらず一定に保つことで、LLM をスケールさせても視覚側の計算負荷が膨らまない設計です。
+Qwen2-VL は Qwen-VL の枠組み（視覚エンコーダ → コネクタ → LLM）を踏襲しつつ、各部品を「解像度に縛られない」よう作り替えています。視覚エンコーダは約 675M パラメータの ViT で、画像でも動画でも共通に使われ、その後段で隣接 $2 \times 2$ トークンを MLP で 1 トークンへ圧縮してから Qwen2 LLM（1.5B / 7.6B / 72B）へ渡します。ViT の規模を LLM の大小によらず一定に保つことで、LLM をスケールさせても視覚側の計算負荷が膨らまない設計です。
 
 <figure class="lec-fig"><svg viewBox="0 0 720 360" role="img" aria-label="Qwen2-VLの全体像。任意解像度の画像をViTで動的に符号化し、隣接2x2トークンをMLPで圧縮してからQwen2 LLMへ統一トークン列として入力する流れを示す図" font-family="ui-sans-serif, system-ui, 'Noto Sans JP', sans-serif">
   <text x="74" y="36" text-anchor="middle" font-size="13" font-weight="700" fill="#18181b">任意解像度の入力</text>
@@ -60,7 +60,7 @@ Qwen2-VL は Qwen-VL の枠組み（視覚エンコーダ → コネクタ → L
 
 これを可能にするため、ViT から**元の絶対位置埋め込みを撤廃し、2次元 RoPE（2D-RoPE）を導入**しました。絶対位置埋め込みは「位置 0〜N まで」という固定長を前提にしますが、2D-RoPE は patch の (行, 列) を回転として相対的に表現するため、何 patch 並んでもよく、任意解像度・任意縦横比を自然に扱えます。推論時には、解像度の異なる複数画像を1本のシーケンスへパックし、パック長の上限で GPU メモリ使用量を抑えます。
 
-さらに ViT 出力をそのまま LLM に流すとトークン数が膨大になるため、**隣接する 2×2 トークンを単純な MLP で 1 トークンへ圧縮**してから LLM に渡します。圧縮後の視覚トークン列は前後を `<|vision_start|>` / `<|vision_end|>` で囲みます。具体例として、patch_size=14 の ViT で 224×224 画像を符号化すると（16×16=256 patch → 2×2 圧縮で 64）、特殊トークンを含めて **66 トークン**になってから LLM に入ります。トークン数の下限・上限は **min/max ピクセル**として指定でき、これが実質的な「視覚トークンの予算」になります。
+さらに ViT 出力をそのまま LLM に流すとトークン数が膨大になるため、**隣接する $2 \times 2$ トークンを単純な MLP で 1 トークンへ圧縮**してから LLM に渡します。圧縮後の視覚トークン列は前後を `<|vision_start|>` / `<|vision_end|>` で囲みます。具体例として、$\text{patch\_size}=14$ の ViT で $224 \times 224$ 画像を符号化すると（$16 \times 16 = 256$ patch → $2 \times 2$ 圧縮で 64）、特殊トークンを含めて **66 トークン**になってから LLM に入ります。トークン数の下限・上限は **min/max ピクセル**として指定でき、これが実質的な「視覚トークンの予算」になります。
 
 <figure class="lec-fig"><svg viewBox="0 0 720 320" role="img" aria-label="解像度に応じて視覚トークン数が動的に変わる様子。小さい画像は少トークン、大きい画像は多トークンになり、隣接2x2をMLPで1トークンに圧縮し、min maxピクセルでトークン予算を制御することを示す図" font-family="ui-sans-serif, system-ui, 'Noto Sans JP', sans-serif">
   <rect x="40" y="50" width="46" height="36" fill="#cffafe" stroke="#0e7490" stroke-width="2"/>

@@ -12,13 +12,13 @@ LLaVA-OneVision の構成は LLaVA 系そのものです。**SigLIP 視覚エン
 
 ## 3つの視覚形態を1つの表現へ（AnyRes）
 
-統合を可能にしている中核が **Higher AnyRes**（バイリニア補間つき AnyRes）です。SigLIP は解像度 384×384 の入力を **729 トークン**に符号化しますが、これを基本単位として、3形態それぞれに「どう視覚トークンへ展開するか」を変えます。
+統合を可能にしている中核が **Higher AnyRes**（バイリニア補間つき AnyRes）です。SigLIP は解像度 $384\times 384$ の入力を **729 トークン**に符号化しますが、これを基本単位として、3形態それぞれに「どう視覚トークンへ展開するか」を変えます。
 
-- **単一画像**：大きな空間構成 (a, b) でタイル分割し、各タイルを符号化したうえでベース画像も加える。視覚トークンを多めに割り当て、**長い系列**で1枚の画像を表現する。これは後述の転移を滑らかにするための意図的な設計で、画像をあえて「動画のような長い系列」に見せる狙いです。
+- **単一画像**：大きな空間構成 $(a, b)$ でタイル分割し、各タイルを符号化したうえでベース画像も加える。視覚トークンを多めに割り当て、**長い系列**で1枚の画像を表現する。これは後述の転移を滑らかにするための意図的な設計で、画像をあえて「動画のような長い系列」に見せる狙いです。
 - **複数画像**：ベース解像度のみを符号化し、**多クロップは行わない**。各画像を素直に並べて、画像枚数ぶんのトークンに収めることで計算資源を節約する。
 - **動画**：各フレームをベース解像度へリサイズして符号化し、**バイリニア補間でフレームあたりのトークン数を削減**する。これにより「フレーム数を増やす／フレームあたりトークンを減らす」のトレードオフを取り、より多くのフレームを見られるようにする。
 
-ここで効いてくるのが、**3形態の最大視覚トークン数をおおよそ同じ規模に揃える**という設計です。論文の例では、単一画像は (1+9)×729 ≈ 7290、複数画像は 12×729 ≈ 8748、動画は 32×196 ≈ 6272 と、いずれも数千トークン規模に収まるよう配分されています。この「揃えること」こそが、形態をまたいだ能力転移を成立させるための土台になります。
+ここで効いてくるのが、**3形態の最大視覚トークン数をおおよそ同じ規模に揃える**という設計です。論文の例では、単一画像は $(1+9)\times 729 \approx 7290$、複数画像は $12\times 729 \approx 8748$、動画は $32\times 196 \approx 6272$ と、いずれも数千トークン規模に収まるよう配分されています。この「揃えること」こそが、形態をまたいだ能力転移を成立させるための土台になります。
 
 <figure class="lec-fig"><svg viewBox="0 0 720 360" role="img" aria-label="単一画像はタイル、複数画像は各画像、動画はフレーム列を、ほぼ同規模のトークン予算内で共通の視覚トークンへ割り当てる図" font-family="ui-sans-serif, system-ui, 'Noto Sans JP', sans-serif"><rect x="20" y="20" width="210" height="320" rx="10" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/><text x="125" y="44" text-anchor="middle" font-size="13" font-weight="700" fill="#3730a3">単一画像＝タイル</text><rect x="45" y="60" width="40" height="40" rx="4" fill="#e0e7ff" stroke="#6366f1" stroke-width="2"/><rect x="93" y="60" width="40" height="40" rx="4" fill="#e0e7ff" stroke="#6366f1" stroke-width="2"/><rect x="141" y="60" width="40" height="40" rx="4" fill="#e0e7ff" stroke="#6366f1" stroke-width="2"/><rect x="45" y="108" width="40" height="40" rx="4" fill="#e0e7ff" stroke="#6366f1" stroke-width="2"/><rect x="93" y="108" width="40" height="40" rx="4" fill="#e0e7ff" stroke="#6366f1" stroke-width="2"/><rect x="141" y="108" width="40" height="40" rx="4" fill="#e0e7ff" stroke="#6366f1" stroke-width="2"/><text x="125" y="175" text-anchor="middle" font-size="11" fill="#3730a3">高解像度を保つ長い系列</text><rect x="45" y="195" width="160" height="34" rx="6" fill="#e0e7ff" stroke="#4338ca" stroke-width="2"/><text x="125" y="217" text-anchor="middle" font-size="12" font-weight="700" fill="#3730a3">複数画像＝各画像</text><rect x="55" y="240" width="40" height="34" rx="4" fill="#eef2ff" stroke="#6366f1" stroke-width="2"/><rect x="105" y="240" width="40" height="34" rx="4" fill="#eef2ff" stroke="#6366f1" stroke-width="2"/><rect x="155" y="240" width="40" height="34" rx="4" fill="#eef2ff" stroke="#6366f1" stroke-width="2"/><rect x="45" y="288" width="160" height="40" rx="6" fill="#ecfeff" stroke="#0e7490" stroke-width="2"/><text x="125" y="305" text-anchor="middle" font-size="12" font-weight="700" fill="#155e75">動画＝フレーム列</text><text x="125" y="321" text-anchor="middle" font-size="10" fill="#155e75">補間でフレーム当たりを圧縮</text><line x1="230" y1="180" x2="320" y2="180" stroke="#71717a" stroke-width="2"/><polygon points="328,180 317,175 317,185" fill="#71717a"/><rect x="335" y="120" width="200" height="120" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/><text x="435" y="165" text-anchor="middle" font-size="13" font-weight="700" fill="#15803d">共通の視覚トークン</text><text x="435" y="190" text-anchor="middle" font-size="11" fill="#15803d">SigLIP 384²＝729 を単位</text><text x="435" y="210" text-anchor="middle" font-size="11" fill="#15803d">3形態で最大トークンを</text><text x="435" y="226" text-anchor="middle" font-size="11" fill="#15803d">ほぼ同規模に揃える</text><line x1="535" y1="180" x2="600" y2="180" stroke="#71717a" stroke-width="2"/><polygon points="608,180 597,175 597,185" fill="#71717a"/><rect x="610" y="140" width="90" height="80" rx="10" fill="#f4f4f5" stroke="#71717a" stroke-width="2"/><text x="655" y="178" text-anchor="middle" font-size="12" font-weight="700" fill="#18181b">Qwen2</text><text x="655" y="196" text-anchor="middle" font-size="11" fill="#18181b">LLM</text></svg><figcaption>単一画像は<b>タイル</b>、複数画像は<b>各画像</b>、動画は<b>フレーム列</b>を、<b>ほぼ同規模のトークン予算</b>に収めて共通表現へ変換します。予算を揃えることが、後述の形態間転移の前提になります。</figcaption></figure>
 
@@ -26,9 +26,9 @@ LLaVA-OneVision の構成は LLaVA 系そのものです。**SigLIP 視覚エン
 
 | 視覚形態 | 視覚エンコーダへの入力 | 多クロップ | トークン配分の方針 | 最大トークンの例 |
 |---|---|---|---|---|
-| 単一画像 | 高解像度タイル＋ベース画像 | あり（大きな (a,b)） | 多めに割り当て、長い系列で表現 | (1+9)×729 ≈ 7290 |
-| 複数画像 | 各画像（ベース解像度のみ） | なし | 画像枚数ぶんに素直に配分 | 12×729 ≈ 8748 |
-| 動画 | 各フレーム（補間で圧縮） | なし | 補間で1枚を圧縮し枚数を稼ぐ | 32×196 ≈ 6272 |
+| 単一画像 | 高解像度タイル＋ベース画像 | あり（大きな $(a,b)$） | 多めに割り当て、長い系列で表現 | $(1+9)\times 729 \approx 7290$ |
+| 複数画像 | 各画像（ベース解像度のみ） | なし | 画像枚数ぶんに素直に配分 | $12\times 729 \approx 8748$ |
+| 動画 | 各フレーム（補間で圧縮） | なし | 補間で1枚を圧縮し枚数を稼ぐ | $32\times 196 \approx 6272$ |
 
 > 補足：これらの配分は「固定計算予算のもとで転移を成立させる」ための設計であり、論文も、計算資源を増やせば画像・フレームあたりトークンを増やして性能をさらに伸ばせる余地がある、と明言しています。数値はあくまで設計例として読むのが安全です。
 

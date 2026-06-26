@@ -171,6 +171,9 @@ img{max-width:100%}
 .prevnext a:hover{border-color:var(--p400);transform:translateY(-2px)}
 .prevnext a:last-child{text-align:right}
 .footer{text-align:center;padding:2.5rem 1rem;font-size:.85rem;color:var(--g500)}
+/* ===== math (MathJax) ===== */
+mjx-container[display="true"]{overflow-x:auto;overflow-y:hidden;max-width:100%;padding:.2rem 0}
+.arithmatex{overflow-x:auto}
 /* ===== figures (inline SVG diagrams) ===== */
 figure.lec-fig{margin:1.4rem 0;padding:1rem 1.1rem .9rem;background:var(--g50);border:1px solid var(--g200);border-radius:12px;overflow-x:auto}
 figure.lec-fig svg{max-width:100%;height:auto;display:block;margin:0 auto}
@@ -188,10 +191,19 @@ figure.lec-fig figcaption b,figure.lec-fig figcaption strong{color:var(--p700)}
 def md_to_html(text: str) -> tuple[str, str]:
     """Markdown を (本文HTML, 目次HTML) に変換する。インライン SVG/HTML はそのまま通す。"""
     m = markdown.Markdown(
-        extensions=["fenced_code", "tables", "codehilite", "sane_lists", "attr_list", "toc"],
+        extensions=[
+            "fenced_code",
+            "tables",
+            "codehilite",
+            "sane_lists",
+            "attr_list",
+            "toc",
+            "pymdownx.arithmatex",  # $...$ / $$...$$ を数式として保護し MathJax へ渡す
+        ],
         extension_configs={
             "codehilite": {"css_class": "codehilite", "guess_lang": False},
             "toc": {"toc_depth": "2-3"},
+            "pymdownx.arithmatex": {"generic": True},  # \(...\) / \[...\] 形式で出力
         },
     )
     body = m.convert(text)
@@ -245,6 +257,13 @@ def page(title: str, body: str, *, rel: str = "") -> str:
   </nav>
 </header>
 {body}
+<script>
+window.MathJax = {{
+  tex: {{ inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] }},
+  options: {{ skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }}
+}};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
 </body>
 </html>
 """

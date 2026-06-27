@@ -1,4 +1,4 @@
-# 08 Qwen-VL — practice（最小推論デモ）
+# 10 Qwen-VL — practice（最小推論デモ）
 
 初代 Qwen-VL（ViT → Position-aware VL Adapter → LLM）を `model.chat()` で動かす最小デモ。
 
@@ -8,8 +8,8 @@
   `einops` / `transformers-stream-generator` 等に依存し、**transformers のバージョン整合がシビア**。
 - 本 practice は `transformers==4.37.2` を目安に固定（動作実績のある組み合わせ）。新しすぎる
   transformers では custom code が壊れることがある。
-- うまく動かない場合は、**確実に動く Qwen デモである [04 Qwen2-VL](../../09_Qwen2-VL/) /
-  [05 Qwen2.5-VL](../../10_Qwen2.5-VL/) を先に試す**ことを推奨。この章は主に**論文（materials）で
+- うまく動かない場合は、**確実に動く Qwen デモである [11 Qwen2-VL](../../11_Qwen2-VL/) /
+  [12 Qwen2.5-VL](../../12_Qwen2.5-VL/) を先に試す**ことを推奨。この章は主に**論文（materials）で
   3 段階学習・grounding・OCR の設計を学ぶ**ことに重点を置く。
 
 ## モデル（`--model`）
@@ -21,7 +21,7 @@
 ## ローカルで実行（uv）
 
 ```bash
-cd lectures/08_Qwen-VL/practice
+cd lectures/10_Qwen-VL/practice
 uv run demo.py
 uv run demo.py --prompt "画像中の物体の位置を説明して"
 ```
@@ -29,7 +29,7 @@ uv run demo.py --prompt "画像中の物体の位置を説明して"
 ## Docker で実行
 
 ```bash
-cd lectures/08_Qwen-VL/practice
+cd lectures/10_Qwen-VL/practice
 docker build -t qwenvl-demo .
 docker run --rm --gpus all \
   -v "$HOME/.cache/huggingface:/root/.cache/huggingface" \

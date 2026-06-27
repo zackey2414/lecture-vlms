@@ -5,7 +5,7 @@
 
 注意: Qwen-VL-Chat は `trust_remote_code=True` 必須の **レガシー custom code** 系で、
 transformers のバージョン整合がシビア（README 参照）。確実に動く Qwen デモは
-[04 Qwen2-VL](../../09_Qwen2-VL/) / [05 Qwen2.5-VL](../../10_Qwen2.5-VL/) を推奨。
+[11 Qwen2-VL](../../11_Qwen2-VL/) / [12 Qwen2.5-VL](../../12_Qwen2.5-VL/) を推奨。
 """
 
 import argparse

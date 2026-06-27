@@ -1,9 +1,31 @@
 {
-  "overview": "LLM をバックボーンに持つ VLM（論文表現では MLLM: 画像＋言語を入力し言語生成を得るモデル）を、論文ベースで構造・仕組みまで理解し、必要に応じて HF transformers の最小推論デモで知見を得る教材。MLLM の原点（Flamingo / BLIP-2 / InstructBLIP / MiniGPT-4）から、visual instruction tuning の LLaVA 系、3段階学習・動的解像度・M-RoPE・長尺動画へ発展する Qwen-VL 系、大規模視覚エンコーダの InternVL 系までを、学習の流れ順・高被引用モデル中心に読む。",
-  "context": "本教材は第一線の MLLM の構造・仕組みを論文ベースで理解することを目的とする。番号は安定した ID であり、実際の学習順は各回の prereqs（学習順序グラフ）が正。",
+  "overview": "視覚言語の基盤から最新 MLLM までを、論文ベースで構造・仕組みまで理解する教材。対照学習の二重エンコーダ（CLIP / SigLIP）を土台に、MLLM の原点（Flamingo / BLIP-2 / InstructBLIP / MiniGPT-4）、visual instruction tuning の LLaVA 系、Qwen 系、InternVL 系、効率・統合の DeepSeek 系（理解＋生成の Janus 含む）、Google 系（PaLI / PaliGemma / Gemma）、early/deep-fusion・統合生成（Chameleon / CogVLM / Emu3）までを、学習の流れ順・高被引用モデル中心に読む。",
+  "context": "本教材は第一線の VLM/MLLM の構造・仕組みを論文ベースで理解することを目的とする。番号は安定した ID であり、実際の学習順は各回の prereqs（学習順序グラフ）が正。",
   "modules": [
     {
-      "id": "01_Flamingo",
+      "id": "01_CLIP",
+      "title": "CLIP — Learning Transferable Visual Models from Natural Language",
+      "track": "視覚言語の基盤",
+      "level": "入門",
+      "goal": "画像とテキストを対照学習で同一の埋め込み空間に揃え、ゼロショット分類・検索を可能にした、ほぼ全ての VLM/MLLM の土台となる二重エンコーダを理解する。",
+      "paper": "Learning Transferable Visual Models From Natural Language Supervision — arXiv:2103.00020",
+      "deliverable": "—（教材ページ）",
+      "needs_groups": ["対照学習", "二重エンコーダ", "ゼロショット"],
+      "prereqs": []
+    },
+    {
+      "id": "02_SigLIP",
+      "title": "SigLIP — Sigmoid Loss for Language Image Pre-training",
+      "track": "視覚言語の基盤",
+      "level": "入門",
+      "goal": "CLIP の softmax 対照損失をペアごとの sigmoid 損失に置き換え、バッチ全体の正規化を不要にして効率と小バッチ性能を改善した視覚言語エンコーダ（現行 MLLM の視覚側で広く採用）を理解する。",
+      "paper": "Sigmoid Loss for Language Image Pre-Training — arXiv:2303.15343",
+      "deliverable": "—（教材ページ）",
+      "needs_groups": ["sigmoid損失", "視覚エンコーダ", "効率化"],
+      "prereqs": ["01_CLIP"]
+    },
+    {
+      "id": "03_Flamingo",
       "title": "Flamingo — Visual Language Model for Few-Shot Learning",
       "track": "黎明期・原点",
       "level": "初級",
@@ -11,10 +33,10 @@
       "paper": "Flamingo: a Visual Language Model for Few-Shot Learning — arXiv:2204.14198",
       "deliverable": "—（教材ページ）",
       "needs_groups": ["Perceiver Resampler", "ゲート付きcross-attn", "in-context few-shot"],
-      "prereqs": []
+      "prereqs": ["01_CLIP"]
     },
     {
-      "id": "02_BLIP-2",
+      "id": "04_BLIP-2",
       "title": "BLIP-2 — Q-Former で凍結エンコーダと凍結LLMを橋渡し",
       "track": "黎明期・原点",
       "level": "入門",
@@ -22,10 +44,10 @@
       "paper": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and LLMs — arXiv:2301.12597",
       "deliverable": "—（教材ページ）",
       "needs_groups": ["Q-Former", "2段階学習", "凍結エンコーダ＋凍結LLM"],
-      "prereqs": ["01_Flamingo"]
+      "prereqs": ["01_CLIP"]
     },
     {
-      "id": "03_InstructBLIP",
+      "id": "05_InstructBLIP",
       "title": "InstructBLIP — instruction-aware Q-Former",
       "track": "黎明期・原点",
       "level": "初級",
@@ -33,10 +55,10 @@
       "paper": "InstructBLIP: Towards General-purpose Vision-Language Models with Instruction Tuning — arXiv:2305.06500",
       "deliverable": "—（教材ページ）",
       "needs_groups": ["instruction-aware Q-Former", "ゼロショット指示追従"],
-      "prereqs": ["02_BLIP-2"]
+      "prereqs": ["04_BLIP-2"]
     },
     {
-      "id": "04_MiniGPT-4",
+      "id": "06_MiniGPT-4",
       "title": "MiniGPT-4 — 単一線形射影で凍結LLMに会話能力",
       "track": "黎明期・原点",
       "level": "入門",
@@ -44,10 +66,10 @@
       "paper": "MiniGPT-4: Enhancing Vision-Language Understanding with Advanced LLMs — arXiv:2304.10592",
       "deliverable": "—（教材ページ）",
       "needs_groups": ["単一線形射影", "凍結LLM", "高品質合成データ"],
-      "prereqs": ["02_BLIP-2"]
+      "prereqs": ["04_BLIP-2"]
     },
     {
-      "id": "05_LLaVA",
+      "id": "07_LLaVA",
       "title": "LLaVA — Visual Instruction Tuning（LLM＋線形projectorの原点）",
       "track": "LLaVA系",
       "level": "入門",
@@ -55,10 +77,10 @@
       "paper": "Visual Instruction Tuning — arXiv:2304.08485",
       "deliverable": "practice/demo.py（llava-hf 系で LLaVA アーキを推論）",
       "needs_groups": ["線形projector", "visual instruction tuning", "GPT-4データ合成"],
-      "prereqs": ["04_MiniGPT-4"]
+      "prereqs": ["06_MiniGPT-4"]
     },
     {
-      "id": "06_LLaVA-1.5",
+      "id": "08_LLaVA-1.5",
       "title": "LLaVA-1.5 — Improved Baselines（MLP projector・336px・標準ベースライン）",
       "track": "LLaVA系",
       "level": "入門",
@@ -66,10 +88,10 @@
       "paper": "Improved Baselines with Visual Instruction Tuning — arXiv:2310.03744",
       "deliverable": "practice/demo.py（llava-hf/llava-1.5-7b-hf）",
       "needs_groups": ["MLP projector", "336px", "学術VQAデータ"],
-      "prereqs": ["05_LLaVA"]
+      "prereqs": ["07_LLaVA"]
     },
     {
-      "id": "07_LLaVA-OneVision",
+      "id": "09_LLaVA-OneVision",
       "title": "LLaVA-OneVision — Easy Visual Task Transfer（単一画像・複数画像・動画の統合）",
       "track": "LLaVA系",
       "level": "中級",
@@ -77,10 +99,10 @@
       "paper": "LLaVA-OneVision: Easy Visual Task Transfer — arXiv:2408.03326",
       "deliverable": "—（教材ページ）",
       "needs_groups": ["単一/複数画像/動画の統合", "task transfer", "AnyRes"],
-      "prereqs": ["06_LLaVA-1.5"]
+      "prereqs": ["08_LLaVA-1.5"]
     },
     {
-      "id": "08_Qwen-VL",
+      "id": "10_Qwen-VL",
       "title": "Qwen-VL — Versatile VLM（Position-aware Adapter・3段階学習・grounding/OCR）",
       "track": "Qwen系",
       "level": "初級",
@@ -88,10 +110,10 @@
       "paper": "Qwen-VL — arXiv:2308.12966",
       "deliverable": "practice/demo.py（Qwen/Qwen-VL-Chat, レガシー custom code）",
       "needs_groups": ["Position-aware VL Adapter", "3段階学習", "grounding/OCR"],
-      "prereqs": ["06_LLaVA-1.5"]
+      "prereqs": ["08_LLaVA-1.5"]
     },
     {
-      "id": "09_Qwen2-VL",
+      "id": "11_Qwen2-VL",
       "title": "Qwen2-VL — Perception at Any Resolution（動的解像度・M-RoPE・動画対応）",
       "track": "Qwen系",
       "level": "中級",
@@ -99,10 +121,10 @@
       "paper": "Qwen2-VL — arXiv:2409.12191",
       "deliverable": "practice/demo.py（Qwen/Qwen2-VL-2B-Instruct）",
       "needs_groups": ["dynamic resolution", "M-RoPE", "動画対応"],
-      "prereqs": ["08_Qwen-VL"]
+      "prereqs": ["10_Qwen-VL"]
     },
     {
-      "id": "10_Qwen2.5-VL",
+      "id": "12_Qwen2.5-VL",
       "title": "Qwen2.5-VL — Technical Report（window attention・絶対時間・長尺動画）",
       "track": "Qwen系",
       "level": "中級",
@@ -110,10 +132,10 @@
       "paper": "Qwen2.5-VL Technical Report — arXiv:2502.13923",
       "deliverable": "practice/demo.py（Qwen/Qwen2.5-VL-3B-Instruct）",
       "needs_groups": ["window attention ViT", "絶対時間", "長尺動画", "文書解析"],
-      "prereqs": ["09_Qwen2-VL"]
+      "prereqs": ["11_Qwen2-VL"]
     },
     {
-      "id": "11_Qwen3-VL",
+      "id": "13_Qwen3-VL",
       "title": "Qwen3-VL — Technical Report（Dense/MoE・Thinking・256K・GUI Agent・3D grounding）",
       "track": "Qwen系",
       "level": "上級",
@@ -121,10 +143,10 @@
       "paper": "Qwen3-VL Technical Report — arXiv:2511.21631",
       "deliverable": "—（教材ページ）",
       "needs_groups": ["Dense/MoE", "Thinking", "256Kコンテキスト", "GUI Agent", "3D grounding"],
-      "prereqs": ["10_Qwen2.5-VL"]
+      "prereqs": ["12_Qwen2.5-VL"]
     },
     {
-      "id": "12_InternVL",
+      "id": "14_InternVL",
       "title": "InternVL — Scaling up Vision Foundation Models（大規模 InternViT）",
       "track": "InternVL系",
       "level": "初級",
@@ -132,10 +154,10 @@
       "paper": "InternVL: Scaling up Vision Foundation Models and Aligning for Generic Visual-Linguistic Tasks — arXiv:2312.14238",
       "deliverable": "—（教材ページ）",
       "needs_groups": ["InternViT(大規模)", "段階的整列", "QLLaMA"],
-      "prereqs": ["02_BLIP-2"]
+      "prereqs": ["04_BLIP-2"]
     },
     {
-      "id": "13_InternVL3",
+      "id": "15_InternVL3",
       "title": "InternVL3 — Native Multimodal Pretraining と Test-Time Recipe",
       "track": "InternVL系",
       "level": "中級",
@@ -143,7 +165,128 @@
       "paper": "InternVL3: Exploring Advanced Training and Test-Time Recipes — arXiv:2504.10479",
       "deliverable": "—（教材ページ）",
       "needs_groups": ["native multimodal pretraining", "可変解像度", "test-time scaling"],
-      "prereqs": ["12_InternVL"]
+      "prereqs": ["14_InternVL"]
+    },
+    {
+      "id": "16_DeepSeek-VL",
+      "title": "DeepSeek-VL — Towards Real-World Vision-Language Understanding",
+      "track": "DeepSeek系",
+      "level": "中級",
+      "goal": "SigLIP-L＋SAM-B のハイブリッド視覚エンコーダと実世界志向のデータ設計で、効率と実用性を両立した DeepSeek 系初代 VLM を理解する。",
+      "paper": "DeepSeek-VL: Towards Real-World Vision-Language Understanding — arXiv:2403.05525",
+      "deliverable": "—（教材ページ）",
+      "needs_groups": ["SigLIP-L＋SAM-B", "実世界データ", "効率設計"],
+      "prereqs": ["08_LLaVA-1.5"]
+    },
+    {
+      "id": "17_DeepSeek-VL2",
+      "title": "DeepSeek-VL2 — MoE Vision-Language Models（動的タイリング＋MoE）",
+      "track": "DeepSeek系",
+      "level": "上級",
+      "goal": "動的タイリングと MoE（MLA 付き）言語モデルにより、活性パラメータを抑えつつ高解像度・高性能を実現した MoE 型 VLM を理解する。",
+      "paper": "DeepSeek-VL2: Mixture-of-Experts Vision-Language Models for Advanced Multimodal Understanding — arXiv:2412.10302",
+      "deliverable": "—（教材ページ）",
+      "needs_groups": ["動的タイリング", "MoE", "MLA"],
+      "prereqs": ["16_DeepSeek-VL"]
+    },
+    {
+      "id": "18_Janus",
+      "title": "Janus — Decoupling Visual Encoding for Unified Understanding & Generation",
+      "track": "DeepSeek系",
+      "level": "中級",
+      "goal": "理解と生成で視覚エンコーディングを分離（decouple）し、単一トランスフォーマで画像理解と画像生成を両立する統合モデルの設計を理解する。",
+      "paper": "Janus: Decoupling Visual Encoding for Unified Multimodal Understanding and Generation — arXiv:2410.13848",
+      "deliverable": "—（教材ページ）",
+      "needs_groups": ["理解と生成の分離", "統合モデル"],
+      "prereqs": ["16_DeepSeek-VL"]
+    },
+    {
+      "id": "19_Janus-Pro",
+      "title": "Janus-Pro — Unified Multimodal Understanding & Generation with Scaling",
+      "track": "DeepSeek系",
+      "level": "上級",
+      "goal": "Janus をデータ・モデル規模・学習戦略の面で強化し、理解と生成の統合性能を引き上げた版を理解する。",
+      "paper": "Janus-Pro: Unified Multimodal Understanding and Generation with Data and Model Scaling — arXiv:2501.17811",
+      "deliverable": "—（教材ページ）",
+      "needs_groups": ["データ・規模強化", "統合生成"],
+      "prereqs": ["18_Janus"]
+    },
+    {
+      "id": "20_PaLI",
+      "title": "PaLI — A Jointly-Scaled Multilingual Language-Image Model",
+      "track": "Google系",
+      "level": "中級",
+      "goal": "大規模な ViT と多言語テキストを共同スケールし、多言語・多タスクの画像言語タスクを単一モデルで解く Google のスケール志向 VLM を理解する。",
+      "paper": "PaLI: A Jointly-Scaled Multilingual Language-Image Model — arXiv:2209.06794",
+      "deliverable": "—（教材ページ）",
+      "needs_groups": ["大規模ViT", "多言語", "共同スケール"],
+      "prereqs": ["01_CLIP"]
+    },
+    {
+      "id": "21_PaliGemma",
+      "title": "PaliGemma — A versatile 3B VLM for transfer（SigLIP＋Gemma）",
+      "track": "Google系",
+      "level": "初級",
+      "goal": "SigLIP 視覚エンコーダと Gemma 言語モデルを線形 projector で接続し、転移のしやすさを重視した 3B 級のオープン VLM を理解する。",
+      "paper": "PaliGemma: A versatile 3B VLM for transfer — arXiv:2407.07726",
+      "deliverable": "—（教材ページ）",
+      "needs_groups": ["SigLIP＋Gemma", "線形projector", "転移"],
+      "prereqs": ["02_SigLIP", "20_PaLI"]
+    },
+    {
+      "id": "22_PaliGemma-2",
+      "title": "PaliGemma 2 — A Family of Versatile VLMs for Transfer",
+      "track": "Google系",
+      "level": "初級",
+      "goal": "PaliGemma を Gemma 2 ベースへ更新し、複数のモデルサイズと解像度で多様な転移タスクに対応した版を理解する。",
+      "paper": "PaliGemma 2: A Family of Versatile VLMs for Transfer — arXiv:2412.03555",
+      "deliverable": "—（教材ページ）",
+      "needs_groups": ["Gemma 2", "複数サイズ/解像度", "転移"],
+      "prereqs": ["21_PaliGemma"]
+    },
+    {
+      "id": "23_Gemma-3",
+      "title": "Gemma 3 — Technical Report（視覚対応の軽量オープンモデル）",
+      "track": "Google系",
+      "level": "中級",
+      "goal": "テキストと視覚を統合した Google の軽量オープンモデル群。SigLIP 系視覚エンコーダと長コンテキストを備え、オンデバイスから対応する設計を理解する。",
+      "paper": "Gemma 3 Technical Report — arXiv:2503.19786",
+      "deliverable": "—（教材ページ）",
+      "needs_groups": ["軽量オープン", "視覚対応", "長コンテキスト"],
+      "prereqs": ["21_PaliGemma"]
+    },
+    {
+      "id": "24_Chameleon",
+      "title": "Chameleon — Mixed-Modal Early-Fusion Foundation Models",
+      "track": "別アーキ・統合",
+      "level": "上級",
+      "goal": "画像とテキストを共通の離散トークン列として最初から混在学習（early-fusion）し、理解と生成を単一トランスフォーマで統一する基盤モデルを理解する。",
+      "paper": "Chameleon: Mixed-Modal Early-Fusion Foundation Models — arXiv:2405.09818",
+      "deliverable": "—（教材ページ）",
+      "needs_groups": ["early-fusion", "離散トークン統一", "理解＋生成"],
+      "prereqs": ["01_CLIP"]
+    },
+    {
+      "id": "25_CogVLM",
+      "title": "CogVLM — Visual Expert for Pretrained Language Models",
+      "track": "別アーキ・統合",
+      "level": "中級",
+      "goal": "言語モデルの各層に視覚専用の重み（visual expert module）を足し込み、projector より深く視覚と言語を融合するコネクタ設計を理解する。",
+      "paper": "CogVLM: Visual Expert for Pretrained Language Models — arXiv:2311.03079",
+      "deliverable": "—（教材ページ）",
+      "needs_groups": ["visual expert module", "deep fusion"],
+      "prereqs": ["08_LLaVA-1.5"]
+    },
+    {
+      "id": "26_Emu3",
+      "title": "Emu3 — Next-Token Prediction is All You Need",
+      "track": "別アーキ・統合",
+      "level": "上級",
+      "goal": "画像・動画・テキストを離散トークン化し、次トークン予測のみで理解と生成を統一する（拡散も合成的設計も使わない）モデルを理解する。",
+      "paper": "Emu3: Next-Token Prediction is All You Need — arXiv:2409.18869",
+      "deliverable": "—（教材ページ）",
+      "needs_groups": ["次トークン予測", "離散トークン", "理解＋生成統一"],
+      "prereqs": ["24_Chameleon"]
     }
   ]
 }

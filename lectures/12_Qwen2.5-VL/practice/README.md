@@ -1,4 +1,4 @@
-# 10 Qwen2.5-VL — practice（最小推論デモ）
+# 12 Qwen2.5-VL — practice（最小推論デモ）
 
 window attention ViT・動的解像度・絶対時間（長尺動画）を持つ Qwen2.5-VL の最小デモ。
 大規模で高機能な MLLM の単体推論を、最小コードで体感できます。
@@ -15,7 +15,7 @@ window attention ViT・動的解像度・絶対時間（長尺動画）を持つ
 ## ローカルで素早く実行（uv）
 
 ```bash
-cd lectures/10_Qwen2.5-VL/practice
+cd lectures/12_Qwen2.5-VL/practice
 uv run demo.py                                      # 既定: 3B + ../../assets/sample.jpg
 uv run demo.py --prompt "画像内の物体をすべて挙げて"
 uv run demo.py --model Qwen/Qwen2.5-VL-7B-Instruct  # 7B に切替
@@ -24,7 +24,7 @@ uv run demo.py --model Qwen/Qwen2.5-VL-7B-Instruct  # 7B に切替
 ## Docker で実行（CLAUDE.md 準拠: コンテナ内 uv）
 
 ```bash
-cd lectures/10_Qwen2.5-VL/practice
+cd lectures/12_Qwen2.5-VL/practice
 docker build -t qwen25vl-demo .
 
 docker run --rm --gpus all \

@@ -259,11 +259,11 @@ def page(title: str, body: str, *, rel: str = "") -> str:
 {body}
 <script>
 window.MathJax = {{
-  tex: {{ inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] }},
-  options: {{ skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }}
+  tex: {{ inlineMath: [['\\\\(', '\\\\)']], displayMath: [['\\\\[', '\\\\]']], processEscapes: true }},
+  options: {{ ignoreHtmlClass: '.*|', processHtmlClass: 'arithmatex' }}
 }};
 </script>
-<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </body>
 </html>
 """

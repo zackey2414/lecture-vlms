@@ -287,6 +287,28 @@
       "deliverable": "—（教材ページ）",
       "needs_groups": ["次トークン予測", "離散トークン", "理解＋生成統一"],
       "prereqs": ["24_Chameleon"]
+    },
+    {
+      "id": "27_Reasoning-Transfer",
+      "title": "推論能力の抽出・移植 — CoT蒸留 / reasoning vector / RL(R1系)",
+      "track": "研究トピック・最前線",
+      "level": "上級",
+      "goal": "大規模(M)LLM/VLM の高い推論能力を、CoT蒸留・推論ベクトル(task arithmetic)・activation steering・RL(R1系)で切り出し、別の小型モデルへ移植する研究を俯瞰する（出典付きサーベイ）。",
+      "paper": "サーベイ（複数出典・本文末に明記）",
+      "deliverable": "—（研究サーベイ）",
+      "needs_groups": ["CoT蒸留", "reasoning vector", "cross-modal task vector", "RL(R1系)"],
+      "prereqs": ["13_Qwen3-VL"]
+    },
+    {
+      "id": "28_Edge-Efficient-MLLM",
+      "title": "エッジ向け小型・高速MLLM — トークン削減・量子化・特化（Jetson実時間）",
+      "track": "研究トピック・最前線",
+      "level": "上級",
+      "goal": "Jetson級GPUで実時間推論できる小型・高速MLLMと、視覚トークン削減・量子化・KV最適化・能力特化といった訓練/最適化技術を俯瞰する（出典付きサーベイ）。",
+      "paper": "サーベイ（複数出典・本文末に明記）",
+      "deliverable": "—（研究サーベイ）",
+      "needs_groups": ["小型MLLM", "視覚トークン削減", "量子化/KV最適化", "エッジ実測"],
+      "prereqs": ["27_Reasoning-Transfer"]
     }
   ]
 }

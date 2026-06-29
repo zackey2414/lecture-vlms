@@ -21,3 +21,16 @@ lectures/
 基本的にはDocker コンテナによって動作させる。
 但し、Docker コンテナ内でuv 環境を作成し、python関連のパッケージの管理などはuv が責務を持つようにする
 
+## ツール呼び出しの記法（重要・厳守メモ）
+
+ツール（Bash / Edit / Write / Task 等）を呼ぶときは、必ず `antml:` 名前空間付きの
+関数呼び出しブロックで出力する。`course` や、名前空間なしの `<invoke>` / `<parameter>`
+と書くと、ハーネスが解釈できず**ただの文字列として表示されるだけで実行されない**。
+
+- 正しい: `antml:function_calls` ブロック内に `antml:invoke`(name属性)、その中に
+  `antml:parameter`(name属性) を置き、`antml:invoke` → `antml:function_calls` で閉じる。
+- 誤り（実行されない）: 先頭に `course` と書く / `<invoke>`・`<parameter>` を
+  `antml:` プレフィックスなしで書く。
+- 検知法: 出力後に tool_result が返らなければ「文字列化して未実行」のサイン。
+  記法を直して正しい `antml:` 付きで出し直す。
+

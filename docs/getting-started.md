@@ -5,9 +5,9 @@
 - **教科書ページ（このサイト）** — 丁寧な地の文と SVG 図・数式で、論文の仕組みを解説します（全回）。
 - **最小推論デモ（`practice/demo.py`）** — HF transformers の `from_pretrained` で実際にモデルを動かします（LLaVA系・Qwen系の一部）。
 
-## 読む順番（8系統・全26回）
+## 読む順番（9系統・全28回）
 
-番号は安定した ID で、実際に学ぶ順番は各回の「前提」をたどる [学習順序グラフ](graph.html)（DAG）が正です。大きく8系統に分かれます。
+番号は安定した ID で、実際に学ぶ順番は各回の「前提」をたどる [学習順序グラフ](graph.html)（DAG）が正です。大きく9系統に分かれます（最後の1系統はモデルではなく研究トピックのサーベイ）。
 
 - **視覚言語の基盤**: `01_CLIP` / `02_SigLIP` — 対照学習の二重エンコーダ。ほぼ全ての MLLM の視覚側の土台。
 - **黎明期・原点**: `03_Flamingo` / `04_BLIP-2` / `05_InstructBLIP` / `06_MiniGPT-4` — 凍結エンコーダ＋凍結LLM を Perceiver / Q-Former / 線形射影で橋渡しする MLLM の出発点。
@@ -17,6 +17,7 @@
 - **DeepSeek系**: `16_DeepSeek-VL` / `17_DeepSeek-VL2` / `18_Janus` / `19_Janus-Pro` — 効率設計・MoE、そして理解＋生成の統合。
 - **Google系**: `20_PaLI` / `21_PaliGemma` / `22_PaliGemma-2` / `23_Gemma-3` — スケール志向と SigLIP＋Gemma のオープン VLM。
 - **別アーキ・統合**: `24_Chameleon` / `25_CogVLM` / `26_Emu3` — early-fusion トークン統一・deep-fusion・次トークン統一生成。
+- **研究トピック・最前線**: `27_Reasoning-Transfer`（推論能力の抽出・移植）/ `28_Edge-Efficient-MLLM`（エッジ向け小型・高速化）— 単一モデルではなく出典付きの研究サーベイ。
 
 ## 読むときの5観点（比較メモのテンプレ）
 
